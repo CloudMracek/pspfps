@@ -1,5 +1,5 @@
 TARGET = pspfps
-OBJS = main.o display/draw.o system/callbacks.o
+OBJS = main.o display/draw.o display/vram.o system/callbacks.o
 
 INCDIR =
 CFLAGS = 
