@@ -1,0 +1,9 @@
+.clangd
+*.o
+*.elf
+*.PBP
+*.SFO
+**/.o
+**/.elf
+**/.PBP
+**/.SFO
