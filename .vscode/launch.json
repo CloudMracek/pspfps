@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Launch PPSSPPQt with ELF",
+        "request": "launch",
+        "program": "PPSSPPQt", 
+        "args": ["./pspfps.elf"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  }

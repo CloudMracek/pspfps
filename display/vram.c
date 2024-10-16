@@ -1,9 +1,9 @@
-#include <pspge.h>
+// sceGuobal variables
 #include <pspgu.h>
+static unsigned int __attribute__((aligned(16))) list[262144];
 
-static unsigned int staticOffset = 0;
-
-static unsigned int get_mem_size(unsigned int width, unsigned int height, unsigned int psm)
+// Get Memory Size
+static unsigned int get_memory_size(unsigned int width, unsigned int height, unsigned int psm)
 {
 	switch (psm)
 	{
@@ -28,15 +28,18 @@ static unsigned int get_mem_size(unsigned int width, unsigned int height, unsign
 	}
 }
 
+// Vram Buffer Request
 void* get_static_vram_buffer(unsigned int width, unsigned int height, unsigned int psm)
 {
-	unsigned int memSize = get_mem_size(width,height,psm);
+	static unsigned int staticOffset = 0;
+	unsigned int memSize = get_memory_size(width,height,psm);
 	void* result = (void*)staticOffset;
 	staticOffset += memSize;
 
 	return result;
 }
 
+// Vram Texture Request
 void* get_static_vram_texture(unsigned int width, unsigned int height, unsigned int psm)
 {
 	void* result = get_static_vram_buffer(width,height,psm);
