@@ -25,6 +25,7 @@
 void stage2() {
 
     int animframe = 0;
+    int mainSoundHandle = 0;
     SceCtrlData pad;
     Texture* anim[46];
 
@@ -100,14 +101,10 @@ void stage2() {
     uint64_t tick_resolution = sceRtcGetTickResolution();
     uint64_t last_tick;
 
-    double state = 0;
+    int state = 0;
     double stateTimer = 0;
-    
-    mp3_init();
-    mp3_load("assets/sounds/portal.mp3", 0);
-    int thid = sceKernelCreateThread("sound2", mp3_update, 0x11, 0xFFFF, 0,0);
-    //sceKernelStartThread(thid, 0, 0);
 
+    mainSoundHandle = start_mp3_playback("assets/sounds/portal.mp3", 0);
 
     while(1) {
         sceRtcGetCurrentTick(&last_tick);
@@ -135,13 +132,11 @@ void stage2() {
         sceGuLightAtt(0, 1.0f, 0.000f, 0.000f); // Example adjustments
         sceGuAmbient(0x00202020);
 
-        if(state == 1 && stateTimer < 5) {
-            sceGuDisable(GU_LIGHT0);
+        if(state >= 2) {
+            sceGuEnable(GU_LIGHT0);
         }
         else {
-            state = 2;
-            stateTimer = 0;
-            sceGuEnable(GU_LIGHT0);
+            sceGuDisable(GU_LIGHT0);
         }
 
 
@@ -210,7 +205,7 @@ void stage2() {
 
         sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, fishHeader->faces_num*3, fishIndices, fishVerts);
 
-        if(state == 0 && stateTimer < 10) {        
+        if(state == 0) {        
             bind_texture(anim[animframe]);
             sceGumMatrixMode(GU_MODEL);
             sceGumLoadIdentity();
@@ -223,11 +218,7 @@ void stage2() {
             sceGuEnable(GU_LIGHTING);
             
         }
-        else {
-            sceKernelTerminateThread(thid);
-            state = 1;
-            stateTimer = 0;
-        }
+
 
 
         bind_texture(flashlightTex);
@@ -252,26 +243,41 @@ void stage2() {
         sceGuEnable(GU_LIGHT0);
         sceGuEnable(GU_LIGHT1);
 
-
-
-
-        end_frame();
+        
+        
+        char buff[100];
+        sprintf(buff, "%f", distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ));
+        draw_string(buff, 0,64,0xffffffff, 0);
 
         if(state == 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
             draw_string("Press the right trigger to interact", 50,200,0xffffffff, 0);
             if( get_button_down(PSP_CTRL_RTRIGGER)) {
-                sceKernelStartThread(thid, 0, 0);
-                state = 1;
+                mainSoundHandle = start_mp3_playback("assets/sounds/fish.mp3", 0);
+                state = 3;
                 stateTimer = 0;
             }
         }
+        end_frame();
 
+
+
+        if(state == 0 && stateTimer >= 10) {
+            state = 1;
+            stateTimer = 0;
+            stop_mp3_playback(mainSoundHandle);
+        }
+
+        if(state == 1 && stateTimer >= 5) {
+            state = 2;
+            stateTimer = 0;
+        }
 
         animframe++;
         if(animframe == 46) {
             animframe = 0;
         }
 
+        mp3_update();
 
         uint64_t current_tick;
         sceRtcGetCurrentTick(&current_tick);
@@ -279,6 +285,9 @@ void stage2() {
         double dt = (double)(current_tick - last_tick) / ((double)tick_resolution);
         stateTimer += dt;
         last_tick = current_tick;
+
+    
+
         update_controls();
         update_camera(1, dt);
     }

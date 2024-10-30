@@ -42,12 +42,14 @@ int main(int argc, char* argv[]) {
     int animframe = 0;
     int portalSpawned = 0;
     SceCtrlData pad;
+    int messageMp3Instance;
+
+    
     int state = 0;
     double stateTimer = 0;
     
     setup_callbacks();
     init_display();
-    pspDebugScreenInit();
 
     start_frame();
     draw_string("LOADING", 210,120,0xffffffff, 0);
@@ -98,19 +100,15 @@ int main(int argc, char* argv[]) {
     Texture* roomTex = load_texture("assets/textures/room.png", GU_FALSE);
     Texture* recorderTex = load_texture("assets/textures/recorder.png", GU_FALSE);
 
-    mp3_init();
-    mp3_load("assets/sounds/message.mp3", 0);
-    int thid;
-
-    thid = sceKernelCreateThread("sound", mp3_update, 0x11, 0xFFFF, 0,0);
-    int startedRecording = 0;
 
     init_controls();
+    mp3_init();
 
     uint64_t tick_resolution = sceRtcGetTickResolution();
     uint64_t last_tick;
 
     while(!should_quit() && running) {
+
         sceRtcGetCurrentTick(&last_tick);
         start_frame();
 
@@ -123,10 +121,6 @@ int main(int argc, char* argv[]) {
 
         sceGuAmbient(0xff111111);
         
-
-
-        
-        
         ScePspFVector3 pos2 = {0, 1, 0};
         sceGuLight(1,GU_POINTLIGHT,GU_DIFFUSE_AND_SPECULAR,&pos2);
         sceGuLightColor(1,GU_DIFFUSE,0xffffffff);
@@ -136,7 +130,7 @@ int main(int argc, char* argv[]) {
         	
         sceGumMatrixMode(GU_PROJECTION);
 		sceGumLoadIdentity();
-		sceGumPerspective(75.0f,16.0/9.0f,0.5f,1000.0f);    
+		sceGumPerspective(75.0f,16.0/9.0f,0.01f,1000.0f);    
 
 
         /*bind_texture(dumbass);
@@ -192,17 +186,10 @@ int main(int argc, char* argv[]) {
         if(dist < 3 && state == 0) {
             draw_string("Press the right bumper to play", 50,200,0xffffffff, 0);
             if( get_button_down(PSP_CTRL_RTRIGGER)) {
-                sceKernelStartThread(thid, 0, 0);
+                messageMp3Instance = start_mp3_playback("assets/sounds/Test.mp3", 0);
                 state = 1;
                 stateTimer = 0;
             }
-        }
-
-        int exitStatus = sceKernelGetThreadExitStatus(thid);
-
-        if(exitStatus == 2 && state == 1) {
-            state = 2;
-            stateTimer = 0;
         }
 
         char buff[100];
@@ -210,8 +197,8 @@ int main(int argc, char* argv[]) {
         draw_string(buff, 0,64,0xffffffff, 0);
 
         if(stateTimer > 15 && state == 2) {
-            mp3_load("assets/sounds/portal.mp3", -1);
-            sceKernelStartThread(thid, 0, 0);
+            
+            messageMp3Instance = start_mp3_playback("assets/sounds/portal.mp3", -1);
             sceGuDisable(GU_LIGHT1);
             ScePspFVector3 pos = { 13, -1.1, -5 };
             sceGuLight(0,GU_POINTLIGHT,GU_DIFFUSE_AND_SPECULAR,&pos);
@@ -223,6 +210,10 @@ int main(int argc, char* argv[]) {
             stateTimer = 0;
         }
         
+
+
+        end_frame();
+    
         if(state == 3) {
             int dist = distance3D(camPos.x, camPos.y, camPos.z, 13, 0, -5);
             if( dist < 3) {
@@ -230,11 +221,17 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        end_frame();
+        if(state == 1 && is_mp3_playback_finished(messageMp3Instance) == 1) {
+            state = 2;
+            stateTimer = 0;
+        }
 
-        if(nextStage) {
-            
-            mp3_stop();
+
+        mp3_update();
+        
+
+        if(1) {
+            stop_mp3_playback(messageMp3Instance);
             start_frame();
             sceGuClearColor(0xff000000);
             sceGuClearDepth(0);

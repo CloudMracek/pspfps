@@ -19,6 +19,9 @@
         "*.tcc": "cpp",
         "format": "cpp",
         "math.h": "c",
-        "pspkernel.h": "c"
+        "pspkernel.h": "c",
+        "psputility.h": "c",
+        "pspaudio.h": "c",
+        "psploadexec.h": "c"
     }
 }
