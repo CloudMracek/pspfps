@@ -1,5 +1,22 @@
 {
     "files.associations": {
-        "draw.h": "c"
+        "draw.h": "c",
+        "pspmoduleinfo.h": "c",
+        "navmesh.h": "c",
+        "psptypes.h": "c",
+        "bwm.h": "c",
+        "audio.h": "c",
+        "stdlib.h": "c",
+        "cstdlib": "c",
+        "pspgum.h": "c",
+        "ios": "c",
+        "*.inc": "cpp",
+        "atomic": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "cstdint": "cpp",
+        "random": "cpp",
+        "*.tcc": "cpp",
+        "format": "cpp"
     }
 }

@@ -1,6 +1,6 @@
 TARGET = pspfps
-OBJS = main.o texture.o display/draw.o display/vram.o system/callbacks.o inc/bwm.o audio.o
-
+OBJS = src/main.o src/texture.o src/navmesh.o src/display/draw.o src/display/vram.o src/system/callbacks.o src/bwm.o src/audio.o \
+		src/camera.o src/stage2.o src/filesystem.o src/controls.o
 INCDIR =
 CFLAGS = 
 
