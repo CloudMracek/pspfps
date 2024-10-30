@@ -89,10 +89,15 @@ void mp3_init() {
 	}
 
     status = sceMp3InitResource();
+
 	if (status<0)
 	{
 		ERRORMSG("ERROR: sceMp3InitResource returned 0x%08X\n", status);
 	}
+}
+
+void mp3_stop() {
+	paused = 1;
 }
 
 void mp3_load(const char* filename, int loop) {
@@ -179,8 +184,6 @@ int mp3_update(unsigned int arg, void *userData) {
 				paused = 1;
 				sceMp3ResetPlayPosition( handle );
 				numPlayed = 0;
-				sceKernelExitThread(2);
-				return 0;
 			}
 			else
 			{
@@ -196,8 +199,11 @@ int mp3_update(unsigned int arg, void *userData) {
 				numPlayed += sceAudioSRCOutputBlocking( volume, buf );
 			}
 		}
+		else {
+			sceKernelExitThread(2);
+		}
 	}
-	return 0;
+
 }
 
 

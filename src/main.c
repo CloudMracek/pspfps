@@ -35,14 +35,6 @@ BWM_VertexIndice* floorIndices;
 
 Texture* anim[46];
 
-float distance3D(float x1, float y1, float z1, float x2, float y2, float z2) {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
-    float dz = z2 - z1;
-
-    return sqrtf(dx * dx + dy * dy + dz * dz);
-}
-
 int main(int argc, char* argv[]) {
 
     int i = 0;
@@ -51,7 +43,7 @@ int main(int argc, char* argv[]) {
     int portalSpawned = 0;
     SceCtrlData pad;
     int state = 0;
-    int stateTimer = 0;
+    double stateTimer = 0;
     
     setup_callbacks();
     init_display();
@@ -214,10 +206,10 @@ int main(int argc, char* argv[]) {
         }
 
         char buff[100];
-        sprintf(buff, "%d,%d", state, stateTimer);
+        sprintf(buff, "%d,%lf", state, stateTimer);
         draw_string(buff, 0,64,0xffffffff, 0);
 
-        if(stateTimer > 1000 && state == 2) {
+        if(stateTimer > 15 && state == 2) {
             mp3_load("assets/sounds/portal.mp3", -1);
             sceKernelStartThread(thid, 0, 0);
             sceGuDisable(GU_LIGHT1);
@@ -233,26 +225,16 @@ int main(int argc, char* argv[]) {
         
         if(state == 3) {
             int dist = distance3D(camPos.x, camPos.y, camPos.z, 13, 0, -5);
-            char buf[20];
-            sprintf(buf, "%d", dist);
-            draw_string(buf, 0, 32, 0xffffffff, 0);
             if( dist < 3) {
-                sceKernelTerminateThread(thid);
                 nextStage = 1;
             }
         }
 
         end_frame();
 
-        stateTimer++;
-
-        animframe +=1;
-        if(animframe == 46) {
-            animframe = 0;
-        }
-
         if(nextStage) {
-
+            
+            mp3_stop();
             start_frame();
             sceGuClearColor(0xff000000);
             sceGuClearDepth(0);
@@ -289,8 +271,6 @@ int main(int argc, char* argv[]) {
             end_frame();
             
 
-            //sceKernelTerminateDeleteThread(thid);
-
             free(roomData);
             free(horizonData);
             free(horizonData);
@@ -312,12 +292,21 @@ int main(int argc, char* argv[]) {
         double dt = (double)(current_tick - last_tick) / ((double)tick_resolution);
 
         last_tick = current_tick;
+
+
+        stateTimer += dt;
+
+        animframe += 1;
+        if(animframe == 46) {
+            animframe = 0;
+        }
+
+
         update_controls();
         update_camera(0, dt);
 
     }
 
-    sceKernelTerminateDeleteThread(thid);
 
     free(roomData);
     free(horizonData);

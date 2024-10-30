@@ -1,3 +1,4 @@
+#include <math.h>
 #include <pspdisplay.h>
 #include <pspgum.h>
 #include <string.h>
@@ -54,6 +55,14 @@ static int fontwidthtab[128] = {
 	 8,  8,  8, 10, // x y z {
 	 8, 10,  8, 12  // | } ~  
 };
+
+float distance3D(float x1, float y1, float z1, float x2, float y2, float z2) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float dz = z2 - z1;
+
+    return sqrtf(dx * dx + dy * dy + dz * dz);
+}
 
 void draw_string(const char* text, int x, int y, unsigned int color, int fw) {
 	int len = (int)strlen(text);

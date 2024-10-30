@@ -1,5 +1,7 @@
 #pragma once
 
+void mp3_stop();
+
 void mp3_init();
 
 void mp3_load(const char *filename, int loop);

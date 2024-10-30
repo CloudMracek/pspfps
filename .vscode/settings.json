@@ -17,6 +17,8 @@
         "cstdint": "cpp",
         "random": "cpp",
         "*.tcc": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "math.h": "c",
+        "pspkernel.h": "c"
     }
 }

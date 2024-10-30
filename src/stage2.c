@@ -18,11 +18,13 @@
 #include "psptypes.h"
 #include "texture.h"
 #include "stage2.h"
+#include "audio.h"
+
 
 
 void stage2() {
 
-    int animframe = 0, animframe2 = 0;
+    int animframe = 0;
     SceCtrlData pad;
     Texture* anim[46];
 
@@ -98,6 +100,15 @@ void stage2() {
     uint64_t tick_resolution = sceRtcGetTickResolution();
     uint64_t last_tick;
 
+    double state = 0;
+    double stateTimer = 0;
+    
+    mp3_init();
+    mp3_load("assets/sounds/portal.mp3", 0);
+    int thid = sceKernelCreateThread("sound2", mp3_update, 0x11, 0xFFFF, 0,0);
+    //sceKernelStartThread(thid, 0, 0);
+
+
     while(1) {
         sceRtcGetCurrentTick(&last_tick);
 
@@ -124,10 +135,12 @@ void stage2() {
         sceGuLightAtt(0, 1.0f, 0.000f, 0.000f); // Example adjustments
         sceGuAmbient(0x00202020);
 
-        if(animframe2 < 512) {
+        if(state == 1 && stateTimer < 5) {
             sceGuDisable(GU_LIGHT0);
         }
         else {
+            state = 2;
+            stateTimer = 0;
             sceGuEnable(GU_LIGHT0);
         }
 
@@ -138,7 +151,7 @@ void stage2() {
         sceGuLightColor(1,GU_SPECULAR,0xffff1111);
         sceGuLightAtt(1,1.0f,0.1f,0.1f);
 
-        if(animframe2 < 256) {
+        if(state == 0) {
             sceGuEnable(GU_LIGHT1);
         }
         else {
@@ -197,7 +210,7 @@ void stage2() {
 
         sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, fishHeader->faces_num*3, fishIndices, fishVerts);
 
-        if(animframe2 < 256) {        
+        if(state == 0 && stateTimer < 10) {        
             bind_texture(anim[animframe]);
             sceGumMatrixMode(GU_MODEL);
             sceGumLoadIdentity();
@@ -208,6 +221,12 @@ void stage2() {
             sceGuDisable(GU_LIGHTING);
             sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, horizonHeader->faces_num*3, horizonIndices, horizonVertices);
             sceGuEnable(GU_LIGHTING);
+            
+        }
+        else {
+            sceKernelTerminateThread(thid);
+            state = 1;
+            stateTimer = 0;
         }
 
 
@@ -238,6 +257,14 @@ void stage2() {
 
         end_frame();
 
+        if(state == 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
+            draw_string("Press the right trigger to interact", 50,200,0xffffffff, 0);
+            if( get_button_down(PSP_CTRL_RTRIGGER)) {
+                sceKernelStartThread(thid, 0, 0);
+                state = 1;
+                stateTimer = 0;
+            }
+        }
 
 
         animframe++;
@@ -245,13 +272,12 @@ void stage2() {
             animframe = 0;
         }
 
-        animframe2++;
 
         uint64_t current_tick;
         sceRtcGetCurrentTick(&current_tick);
 
         double dt = (double)(current_tick - last_tick) / ((double)tick_resolution);
-
+        stateTimer += dt;
         last_tick = current_tick;
         update_controls();
         update_camera(1, dt);
