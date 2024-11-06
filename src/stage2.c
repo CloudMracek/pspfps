@@ -193,15 +193,17 @@ void stage2() {
 
         sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, strutsHeader->faces_num*3, strutsIndices, strutsVerts);
 
-        bind_texture(fishTex);
-        sceGumMatrixMode(GU_MODEL);
-		sceGumLoadIdentity();
-		{
-			ScePspFVector3 pos = { -18, 0, 40 };
-            ScePspFVector3 rot = {0, -45.0f / 180.0f * GU_PI, 0};
-			sceGumTranslate(&pos);
-            sceGumRotateXYZ(&rot);
-		}
+        if(state <= 3) {
+            bind_texture(fishTex);
+            sceGumMatrixMode(GU_MODEL);
+            sceGumLoadIdentity();
+            {
+                ScePspFVector3 pos = { -18, 0, 40 };
+                ScePspFVector3 rot = {0, -45.0f / 180.0f * GU_PI, 0};
+                sceGumTranslate(&pos);
+                sceGumRotateXYZ(&rot);
+            }
+        }
 
         sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, fishHeader->faces_num*3, fishIndices, fishVerts);
 
@@ -246,20 +248,23 @@ void stage2() {
         
         
         char buff[100];
-        sprintf(buff, "%f", distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ));
+        sprintf(buff, "%f,%f,%f", camPos.x, camPos.y, camPos.z);
         draw_string(buff, 0,64,0xffffffff, 0);
 
-        if(state == 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
+        if(state >= 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
             draw_string("Press the right trigger to interact", 50,200,0xffffffff, 0);
             if( get_button_down(PSP_CTRL_RTRIGGER)) {
                 mainSoundHandle = start_mp3_playback("assets/sounds/fish.mp3", 0);
-                state = 3;
+                state = 100;
                 stateTimer = 0;
             }
         }
         end_frame();
 
-
+        if(state == 100 && stateTimer >= 20) {
+            state = 3;
+            stateTimer = 0;
+        }
 
         if(state == 0 && stateTimer >= 10) {
             state = 1;

@@ -44,5 +44,5 @@ void mp3_stop(MP3Player *player);
 int fillStreamBuffer(MP3Player *player);
 
 // Updates MP3 playback for a specific instance (runs in a separate thread).
-int mp3_update();
+void mp3_update();
 

@@ -1,8 +1,6 @@
 #include "audio.h"
 #include "pspdebug.h"
 #include "pspiofilemgr.h"
-#include "psploadexec.h"
-#include "pspthreadman.h"
 
 #include <stdio.h>
 #include <pspaudio.h>
@@ -23,8 +21,8 @@ void error(char* msg) {
 
 int fillStreamBuffer(MP3Player *player) {
     unsigned char* dst;
-	long int write;
-	long int pos;
+	SceInt32 write;
+	SceInt32 pos;
 	// Get Info on the stream (where to fill to, how much to fill, where to fill from)
 	int status = sceMp3GetInfoToAddStreamData( player->handle, &dst, &write, &pos);
 	if (status<0)
@@ -131,26 +129,23 @@ void mp3_load(MP3Player *player, const char* filename, int loop) {
 	
 }
 
-int mp3_update() {
+void mp3_update() {
 	for(int i = 0; i < 4; i++) {
     MP3Player* player = &mp3Instances[i];
 	if(player->used == 0) continue;
 		if (!player->paused)
 		{	
-			pspDebugScreenPrintf("lol", 0, 0, 0xFFFFFF, 0);
 			// Check if we need to fill our str	am buffer
 			if (sceMp3CheckStreamDataNeeded( player->handle )>0)
 			{
 				fillStreamBuffer( player );
 			}
 
-			pspDebugScreenPrintf("lol", 0, 20, 0xFFFFFF, 0);
 			// Decode some samples
 			short* buf;
 			int bytesDecoded;
 			int retries = 0;
 			// We retry in case it's just that we reached the end of the stream and need to loop
-							pspDebugScreenPrintf("lol", 0,30, 0xFFFFFF, 0);
 
 			for (;retries<1;retries++)
 			{	
@@ -166,7 +161,6 @@ int mp3_update() {
 					player->numPlayed = 0;
 				}
 			}
-							pspDebugScreenPrintf("lol", 0,40, 0xFFFFFF, 0);
 
 			if (bytesDecoded<0 && bytesDecoded!=0x80671402)
 			{
@@ -179,7 +173,6 @@ int mp3_update() {
 				player->paused = 1;
 				sceMp3ResetPlayPosition( player->handle );
 				player->numPlayed = 0;
-				stop_mp3_playback(i);
 			}
 			else
 			{
@@ -197,6 +190,9 @@ int mp3_update() {
 				player->lastDecoded = bytesDecoded;
 			}
 
+		}
+		else {
+			stop_mp3_playback(i);
 		}
 	}
 	
@@ -216,13 +212,20 @@ int start_mp3_playback(const char* filename, int loop) {
 
 void stop_mp3_playback(int instanceId) {
     if (instanceId >= 0 && instanceId < MAX_MP3_INSTANCES && mp3Instances[instanceId].used != 0) {
-        sceKernelTerminateDeleteThread(mp3Instances[instanceId].threadId);
+		// Reset play position and release the MP3 handle
+		sceMp3ResetPlayPosition(mp3Instances[instanceId].handle);
         sceMp3ReleaseMp3Handle(mp3Instances[instanceId].handle);
         sceIoClose(mp3Instances[instanceId].fd);
         mp3Instances[instanceId].used = 0;
+
+        // Ensure audio output has finished before releasing the channel
+        if (mp3Instances[instanceId].channel >= 0) {
+            sceAudioSRCOutputBlocking(mp3Instances[instanceId].volume, NULL); // Ensure no pending buffer
+            sceAudioSRCChRelease();
+            mp3Instances[instanceId].channel = -1;
+        }
     }
 }
-
 int is_mp3_playback_finished(int instanceId) {
     if (instanceId < 0 || instanceId >= MAX_MP3_INSTANCES) {
         return 1; // Invalid instance ID; treat as "finished"

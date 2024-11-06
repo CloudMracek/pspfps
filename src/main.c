@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -130,7 +129,7 @@ int main(int argc, char* argv[]) {
         	
         sceGumMatrixMode(GU_PROJECTION);
 		sceGumLoadIdentity();
-		sceGumPerspective(75.0f,16.0/9.0f,0.01f,1000.0f);    
+		sceGumPerspective(90.0f,16.0/9.0f,0.5f,1000.0f);    
 
 
         /*bind_texture(dumbass);
@@ -186,7 +185,7 @@ int main(int argc, char* argv[]) {
         if(dist < 3 && state == 0) {
             draw_string("Press the right bumper to play", 50,200,0xffffffff, 0);
             if( get_button_down(PSP_CTRL_RTRIGGER)) {
-                messageMp3Instance = start_mp3_playback("assets/sounds/Test.mp3", 0);
+                messageMp3Instance = start_mp3_playback("assets/sounds/message.mp3", 0);
                 state = 1;
                 stateTimer = 0;
             }
@@ -230,7 +229,7 @@ int main(int argc, char* argv[]) {
         mp3_update();
         
 
-        if(1) {
+        if(nextStage) {
             stop_mp3_playback(messageMp3Instance);
             start_frame();
             sceGuClearColor(0xff000000);
