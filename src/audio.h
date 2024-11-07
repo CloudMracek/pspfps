@@ -37,12 +37,17 @@ void stop_mp3_playback(int instanceId);
 
 int is_mp3_playback_finished(int instanceId);
 
+void pause(int instanceId);
+void play(int instanceId);
+
 // Pauses playback for the specified MP3 instance.
 void mp3_stop(MP3Player *player);
+
+void displayMP3InstancesInfo();
 
 // Fills the MP3 stream buffer for the specified instance (internal use).
 int fillStreamBuffer(MP3Player *player);
 
 // Updates MP3 playback for a specific instance (runs in a separate thread).
-void mp3_update();
+int mp3_update();
 

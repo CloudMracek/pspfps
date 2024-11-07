@@ -1,3 +1,4 @@
+#include <math.h>
 #include <pspmoduleinfo.h>
 #include <pspkernel.h>
 #include <pspgu.h>
@@ -22,7 +23,7 @@
 
 
 
-void stage2() {
+int stage2() {
 
     int animframe = 0;
     int mainSoundHandle = 0;
@@ -104,9 +105,17 @@ void stage2() {
     int state = 0;
     double stateTimer = 0;
 
-    mainSoundHandle = start_mp3_playback("assets/sounds/portal.mp3", 0);
 
-    while(1) {
+    int soundThread =
+        sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFA0, 0, 0);
+    sceKernelStartThread(soundThread, 0, 0);
+
+    sceKernelDelayThread(5000);
+    start_mp3_playback("assets/sounds/portal.mp3", 0);
+
+    setLimits(12, INFINITY, INFINITY);
+
+    while(!should_quit()) {
         sceRtcGetCurrentTick(&last_tick);
 
         start_frame();
@@ -222,47 +231,70 @@ void stage2() {
         }
 
 
+        if(state >= 2) {
+            bind_texture(flashlightTex);
+            sceGumMatrixMode(GU_VIEW);
+            sceGumLoadIdentity();
 
-        bind_texture(flashlightTex);
-        sceGumMatrixMode(GU_VIEW);
-        sceGumLoadIdentity();
+            sceGumMatrixMode(GU_MODEL);
+            sceGumLoadIdentity();
+            {
+                ScePspFVector3 pos = { 3, -2, -3 };
+                ScePspFVector3 rot = {0, 0, 180.0f / 180.0f * GU_PI};
+                sceGumTranslate(&pos);
+                sceGumRotateXYZ(&rot);
+            }
 
-        sceGumMatrixMode(GU_MODEL);
-        sceGumLoadIdentity();
-        {
-            ScePspFVector3 pos = { 3, -2, -3 };
-            ScePspFVector3 rot = {0, 0, 180.0f / 180.0f * GU_PI};
-            sceGumTranslate(&pos);
-            sceGumRotateXYZ(&rot);
+            sceGuDisable(GU_LIGHT0);
+            sceGuDisable(GU_LIGHT1);
+            sceGuDisable(GU_DEPTH_TEST);
+            sceGuAmbient(0xff333333);
+            sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, flashlightHeader->faces_num*3, flashlightIndices, flashlightVerts);
+            sceGuEnable(GU_DEPTH_TEST);
+            sceGuEnable(GU_LIGHT0);
+            sceGuEnable(GU_LIGHT1);
         }
 
-        sceGuDisable(GU_LIGHT0);
-        sceGuDisable(GU_LIGHT1);
-        sceGuDisable(GU_DEPTH_TEST);
-        sceGuAmbient(0xff333333);
-        sceGumDrawArray(GU_TRIANGLES, GU_INDEX_16BIT | GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D, flashlightHeader->faces_num*3, flashlightIndices, flashlightVerts);
-        sceGuEnable(GU_DEPTH_TEST);
-        sceGuEnable(GU_LIGHT0);
-        sceGuEnable(GU_LIGHT1);
-
-        
-        
-        char buff[100];
-        sprintf(buff, "%f,%f,%f", camPos.x, camPos.y, camPos.z);
-        draw_string(buff, 0,64,0xffffffff, 0);
-
-        if(state >= 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
+        if(state == 2 && distance3D(camPos.x, camPos.y, camPos.z, -18, 0, 40 ) < 3) {
             draw_string("Press the right trigger to interact", 50,200,0xffffffff, 0);
             if( get_button_down(PSP_CTRL_RTRIGGER)) {
                 mainSoundHandle = start_mp3_playback("assets/sounds/fish.mp3", 0);
-                state = 100;
+                state = 3;
                 stateTimer = 0;
             }
         }
+
+        if(state == 4 && distance3D(camPos.x, camPos.y, camPos.z, -69, 0, 10) < 8) {
+            draw_string("Press the right trigger to jump to the lower level", 30,200,0xffffffff, 0);
+            draw_string("THERE'S NO COMING BACK", 30,212,0xffffffff, 0);
+            if( get_button_down(PSP_CTRL_RTRIGGER)) {
+                end_frame();
+                free(dungeonData);
+                free(horizonData);
+                free(flashlightData);
+                free(strutsData);
+                free(fishData);
+
+                free_texure(dungeonTex);
+                free_texure(strutsTex);
+                free_texure(flashlightTex);
+                free_texure(fishTex);
+                for(int i = 0; i < 46; i+=1) {
+                    free_texure(anim[i]);
+                }
+                destroySteps();
+                return 1;
+            }
+
+        }
+
+
+    displayMP3InstancesInfo();
+
         end_frame();
 
-        if(state == 100 && stateTimer >= 20) {
-            state = 3;
+        if(state == 3 && stateTimer >= 20) {
+            state = 4;
             stateTimer = 0;
         }
 
@@ -274,15 +306,16 @@ void stage2() {
 
         if(state == 1 && stateTimer >= 5) {
             state = 2;
+            setLimits(INFINITY, INFINITY, INFINITY);
             stateTimer = 0;
+            start_mp3_playback("assets/sounds/flashlight.mp3", 0);
+            setSteps(1);
         }
 
         animframe++;
         if(animframe == 46) {
             animframe = 0;
         }
-
-        mp3_update();
 
         uint64_t current_tick;
         sceRtcGetCurrentTick(&current_tick);
@@ -297,4 +330,17 @@ void stage2() {
         update_camera(1, dt);
     }
     free(dungeonData);
+    free(horizonData);
+    free(flashlightData);
+    free(strutsData);
+    free(fishData);
+
+    free_texure(dungeonTex);
+    free_texure(strutsTex);
+    free_texure(flashlightTex);
+    free_texure(fishTex);
+    for(int i = 0; i < 46; i+=1) {
+        free_texure(anim[i]);
+    }
+    return 0;
 }

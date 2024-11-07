@@ -1,1 +1,1 @@
-void stage2();
+int stage2();
