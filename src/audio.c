@@ -17,7 +17,7 @@
     sprintf(msg, __VA_ARGS__);                                                 \
     error(msg);                                                                \
   }
-#define MAX_MP3_INSTANCES 2 // Static number of MP3 instances
+#define MAX_MP3_INSTANCES 1 // Static number of MP3 instances
 
 static MP3Player mp3Instances[MAX_MP3_INSTANCES];
 
@@ -41,7 +41,7 @@ void displayMP3InstancesInfo() {
                 player->loop);
         
         // Draw the line and move y position down by 10 for the next instance
-        draw_string(buffer, x, y, 0xffffffff, 0);
+        //draw_string(buffer, x, y, 0xffffffff, 0);
         y += 10;
     }
 }

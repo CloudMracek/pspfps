@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
       sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFA0, 0, 0);
   sceKernelStartThread(soundThread, 0, 0);
 
-  setSteps(0);
+  //setSteps(0);
 
   uint64_t tick_resolution = sceRtcGetTickResolution();
   uint64_t last_tick;
@@ -237,9 +237,9 @@ int main(int argc, char *argv[]) {
       stateTimer = 0;
     }
 
-    if (1) {
+    if (nextStage) {
       stop_mp3_playback(messageMp3Instance);
-      destroySteps();
+      //destroySteps();
       start_frame();
       sceGuClearColor(0xff000000);
       sceGuClearDepth(0);

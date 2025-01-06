@@ -116,6 +116,7 @@ void projectToSegment(Vertex v1, Vertex v2, float *camX, float *camZ) {
 }
 
 int isPointInQuad(Vertex v0, Vertex v1, Vertex v2, Vertex v3, float camX, float camZ) {
+
     float minX = fminf(fminf(v0.x, v1.x), fminf(v2.x, v3.x));
     float maxX = fmaxf(fmaxf(v0.x, v1.x), fmaxf(v2.x, v3.x));
     float minZ = fminf(fminf(v0.z, v1.z), fminf(v2.z, v3.z));
