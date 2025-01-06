@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 
   mp3_init();
   int soundThread =
-      sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFA0, 0, 0);
+      sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFFFF, 0, 0);
   sceKernelStartThread(soundThread, 0, 0);
 
   //setSteps(0);

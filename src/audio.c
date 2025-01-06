@@ -219,7 +219,7 @@ int mp3_update() {
         sceAudioSRCOutputBlocking(mp3Instances[0].volume, mixedBuffer);
 
         // Introduce a small delay to avoid high CPU usage
-        sceKernelDelayThread(1);
+        //sceKernelDelayThread(1);
     }
 }
 

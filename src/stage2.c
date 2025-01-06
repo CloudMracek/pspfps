@@ -107,7 +107,7 @@ int stage2() {
 
 
     int soundThread =
-        sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFA0, 0, 0);
+        sceKernelCreateThread("sound_thread", mp3_update, 0x11, 0xFFF, 0, 0);
     sceKernelStartThread(soundThread, 0, 0);
 
     sceKernelDelayThread(5000);
