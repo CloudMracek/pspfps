@@ -156,9 +156,12 @@ int mp3_update() {
         short mixedBuffer[16 * (1152 / 2)];  // Enough space for a frame (1152 samples per channel)
         memset(mixedBuffer, 0, sizeof(mixedBuffer));
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < MAX_MP3_INSTANCES; i++) {
             MP3Player *player = &mp3Instances[i];
-            if (player->used == 0) continue;
+            if (player->used == 0) {
+              sceKernelDelayThread(1);
+              continue;
+            }
 
             if (!player->paused) {
                 // Check if we need to fill our stream buffer
@@ -192,34 +195,16 @@ int mp3_update() {
                     sceMp3ResetPlayPosition(player->handle);
                     player->numPlayed = 0;
                 } else {
-                    // Mix the decoded audio buffer into the mixedBuffer
-                    int numSamples = bytesDecoded / 2;  // Assuming 16-bit audio samples
-
-                    for (int j = 0; j < numSamples; j++) {
-                        mixedBuffer[j] += buf[j];
-
-                        // Clamp the value to avoid clipping
-                        if (mixedBuffer[j] > 32767) {
-                            mixedBuffer[j] = 32767;
-                        } else if (mixedBuffer[j] < -32768) {
-                            mixedBuffer[j] = -32768;
-                        }
-                    }
-
-                    player->numPlayed += numSamples;
-                    player->lastDecoded = bytesDecoded;
+                  player->numPlayed += sceAudioSRCOutputBlocking( player->volume, buf );
                 }
             } else if (player->loop != -1) {
                 stop_mp3_playback(i);
             }
         }
 
-        // After mixing, output the mixed buffer to the audio channel
-        // (should be done after all instances have been processed)
-        sceAudioSRCOutputBlocking(mp3Instances[0].volume, mixedBuffer);
 
         // Introduce a small delay to avoid high CPU usage
-        //sceKernelDelayThread(1);
+        sceKernelDelayThread(1);
     }
 }
 
