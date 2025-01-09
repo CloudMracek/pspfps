@@ -10,3 +10,4 @@ Set up [PSPDEV](https://github.com/pspdev/pspdev) (linux and mac only) and run `
 
 ## Attributions
 Event horizon animation from [CAP](https://github.com/RafaelDeJongh/cap_resources)
+Amazing music at the end by [MiniStumpy](https://www.youtube.com/@MiniStumpy)
